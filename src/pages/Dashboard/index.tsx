@@ -1,58 +1,63 @@
-import React from 'react';
+import React, { useState, FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
 
 import logoImg from '../../assets/logo.svg';
+import api from '../../services/api';
 
 import { Title, Form, Repositories } from './styles';
 
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
+
 const Dashboard: React.FC = () => {
+  const [newRepo, setNewRepo] = useState('');
+  const [repositories, setRepositories] = useState<Repository[]>([]);
+
+  async function handleAddRepository(
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    event.preventDefault();
+
+    const response = await api.get(`repos/${newRepo}`);
+
+    const repository = response.data;
+
+    setRepositories([...repositories, repository]);
+    setNewRepo('');
+  }
+
   return (
     <>
       <img src={logoImg} alt="Github Explorer" />
       <Title>Explore Github repositories</Title>
 
-      <Form action="">
-        <input placeholder="Type the repository name" />
+      <Form onSubmit={handleAddRepository}>
+        <input
+          value={newRepo}
+          onChange={(e) => setNewRepo(e.target.value)}
+          placeholder="Type the repository name"
+        />
         <button type="submit">Search</button>
       </Form>
 
       <Repositories>
-        <a href="tst">
-          <img
-            src="https://avatars0.githubusercontent.com/u/23220615?s=460&u=41eb573e1b02ef6fc1f4d08996bf0d16596c9563&v=4"
-            alt="Eduardo Faria"
-          />
-          <div>
-            <strong>zEduardofaria/gobarber-api-ts</strong>
-            <p>Easy peasy lemon squeezy</p>
-          </div>
+        {repositories.map((repo) => (
+          <a key={repo.full_name} href="tst">
+            <img src={repo.owner.avatar_url} alt={repo.owner.login} />
+            <div>
+              <strong>{repo.full_name}</strong>
+              <p>{repo.description}</p>
+            </div>
 
-          <FiChevronRight size={20} />
-        </a>
-        <a href="tst">
-          <img
-            src="https://avatars0.githubusercontent.com/u/23220615?s=460&u=41eb573e1b02ef6fc1f4d08996bf0d16596c9563&v=4"
-            alt="Eduardo Faria"
-          />
-          <div>
-            <strong>zEduardofaria/gobarber-api-ts</strong>
-            <p>Easy peasy lemon squeezy</p>
-          </div>
-
-          <FiChevronRight size={20} />
-        </a>
-        <a href="tst">
-          <img
-            src="https://avatars0.githubusercontent.com/u/23220615?s=460&u=41eb573e1b02ef6fc1f4d08996bf0d16596c9563&v=4"
-            alt="Eduardo Faria"
-          />
-          <div>
-            <strong>zEduardofaria/gobarber-api-ts</strong>
-            <p>Easy peasy lemon squeezy</p>
-          </div>
-
-          <FiChevronRight size={20} />
-        </a>
+            <FiChevronRight size={20} />
+          </a>
+        ))}
       </Repositories>
     </>
   );
